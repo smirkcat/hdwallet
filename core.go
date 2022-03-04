@@ -35,19 +35,37 @@ func InitHdwallet(mnemonic string) {
 var pathdrive = "m/44'/60'/0'/0/%d"
 
 func NewAddressIndex(index int, flag ...bool) (publicstr, privatestr string, address map[string]string, err error) {
-	publicstr, privatestr, err = NewAddress(fmt.Sprintf(pathdrive, index))
-	if err == nil && len(flag) > 0 && flag[0] {
-		address = make(map[string]string)
-		pub, _ := GetPublicKeyByHexString(publicstr)
-		address["eth"] = PubkeyToAddressETH(*pub)
-		address["tron"] = PubkeyToAddressTron(*pub)
+	privateKey, err := NewPrivateKey(fmt.Sprintf(pathdrive, index))
+	if err == nil {
+		publicstr = PubkeyToHexString(privateKey.Public().(*ecdsa.PublicKey))
+		privatestr = PrikeyToHexString(privateKey)
+		if len(flag) > 0 && flag[0] {
+			address = make(map[string]string)
+			address["eth"] = PrikeyToAddressETH(privateKey)
+			address["tron"] = PrikeyToAddressTron(privateKey)
+		}
+	}
+	return
+}
+
+func NewPrivateKey(path string) (privateKey *ecdsa.PrivateKey, err error) {
+	if wallet != nil && path != "" {
+		path := hdwallet.MustParseDerivationPath(path)
+		var account accounts.Account
+		account, err = wallet.Derive(path, true)
+		if err != nil {
+			return
+		}
+		privateKey, err = wallet.PrivateKey(account)
+	} else {
+		privateKey, err = ecdsa.GenerateKey(crypto.S256(), rand.Reader)
 	}
 	return
 }
 
 func NewAddress(path string) (publicstr, privatestr string, err error) {
 	var privateKey *ecdsa.PrivateKey
-	if wallet != nil {
+	if wallet != nil && path != "" {
 		path := hdwallet.MustParseDerivationPath(path)
 		var account accounts.Account
 		account, err = wallet.Derive(path, true)
