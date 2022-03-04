@@ -35,7 +35,7 @@ func InitHdwallet(mnemonic string) {
 var pathdrive = "m/44'/60'/0'/0/%d"
 
 func NewAddressIndex(index int, flag ...bool) (publicstr, privatestr string, address map[string]string, err error) {
-	privateKey, err := NewPrivateKey(fmt.Sprintf(pathdrive, index))
+	privateKey, err := NewPrivateKeyIndex(index)
 	if err == nil {
 		publicstr = PubkeyToHexString(privateKey.Public().(*ecdsa.PublicKey))
 		privatestr = PrikeyToHexString(privateKey)
@@ -46,6 +46,10 @@ func NewAddressIndex(index int, flag ...bool) (publicstr, privatestr string, add
 		}
 	}
 	return
+}
+
+func NewPrivateKeyIndex(index int) (privateKey *ecdsa.PrivateKey, err error) {
+	return NewPrivateKey(fmt.Sprintf(pathdrive, index))
 }
 
 func NewPrivateKey(path string) (privateKey *ecdsa.PrivateKey, err error) {
