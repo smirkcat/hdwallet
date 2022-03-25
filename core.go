@@ -110,33 +110,41 @@ func GenPwd() string {
 	return uuid.Must(uuid.NewV4()).String()
 }
 
-// 秘钥解析
-func LoadPrivateKeyFromDecrypt(encode, pwd string) (account *ecdsa.PrivateKey, err error) {
+func Encrypt(str, pwd string) (encode string, err error) {
+	md5sum := md5.Sum([]byte(pwd))
+	result, err := AesEncrypt([]byte(str), md5sum[:])
+	if err != nil {
+		return
+	}
+	encode = base64.StdEncoding.EncodeToString(result)
+	return
+}
+
+func Decrypt(encode, pwd string) (str []byte, err error) {
 	re, err1 := base64.StdEncoding.DecodeString(encode)
 	if err != nil {
 		err = err1
 		return
 	}
 	md5sum := md5.Sum([]byte(pwd))
-	result, err1 := AesDecrypt(re, md5sum[:])
+	str, err = AesDecrypt(re, md5sum[:])
+	return
+}
+
+// 秘钥解析
+func LoadPrivateKeyFromDecrypt(encode, pwd string) (account *ecdsa.PrivateKey, err error) {
+	result, err := Decrypt(encode, pwd)
 	if err != nil {
-		err = err1
 		return
 	}
 	account, err = GetPrivateKeyByHexString(string(result))
 	return
 }
 
-// 加密保存
+// 私钥加密
 func StorePrivateKeyToDecrypt(account *ecdsa.PrivateKey, password string) (encode string, err error) {
 	prikey := PrikeyToHexString(account)
-	md5sum := md5.Sum([]byte(password))
-	result, err1 := AesEncrypt([]byte(prikey), md5sum[:])
-	if err1 != nil {
-		err = err1
-		return
-	}
-	encode = base64.StdEncoding.EncodeToString(result)
+	encode, err = Encrypt(prikey, password)
 	return
 }
 
