@@ -11,7 +11,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gofrs/uuid"
-	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 	"github.com/tyler-smith/go-bip39"
 )
 
@@ -21,11 +20,11 @@ func RandSeed() string {
 	return mnemonic
 }
 
-var wallet *hdwallet.Wallet
+var wallet *Wallet
 
 func InitHdwallet(mnemonic string) {
 	var err error
-	wallet, err = hdwallet.NewFromMnemonic(mnemonic)
+	wallet, err = NewFromMnemonic(mnemonic)
 	if err != nil {
 		panic(err)
 	}
@@ -54,7 +53,7 @@ func NewPrivateKeyIndex(index int) (privateKey *ecdsa.PrivateKey, err error) {
 
 func NewPrivateKey(path string) (privateKey *ecdsa.PrivateKey, err error) {
 	if wallet != nil && path != "" {
-		path := hdwallet.MustParseDerivationPath(path)
+		path := MustParseDerivationPath(path)
 		var account accounts.Account
 		account, err = wallet.Derive(path, true)
 		if err != nil {
@@ -70,7 +69,7 @@ func NewPrivateKey(path string) (privateKey *ecdsa.PrivateKey, err error) {
 func NewAddress(path string) (publicstr, privatestr string, err error) {
 	var privateKey *ecdsa.PrivateKey
 	if wallet != nil && path != "" {
-		path := hdwallet.MustParseDerivationPath(path)
+		path := MustParseDerivationPath(path)
 		var account accounts.Account
 		account, err = wallet.Derive(path, true)
 		if err != nil {
